@@ -5,17 +5,13 @@ import {
   TextField,
   Typography,
   Paper,
-  Snackbar,
-  Alert,
+  Link,
 } from "@mui/material";
 import axios from "../api/axios";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [open, setOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const handleLogin = async () => {
     try {
@@ -26,8 +22,7 @@ const Login = () => {
       // Redirect or perform any post-login actions here
     } catch (error) {
       console.error("Login failed:", error);
-      setErrorMessage(error.response.data.message);
-      setOpen(true);
+      alert(error.response.data.message);
     }
   };
 
@@ -38,23 +33,13 @@ const Login = () => {
         password,
       });
       console.log("Registration successful:", response.data);
-      setSuccessMessage(
+      alert(
         "Registration successful. Please check your email for verification."
       );
-      setOpen(true);
-      // Optionally, you can redirect or show a success message
     } catch (error) {
       console.error("Registration failed:", error);
-      setErrorMessage(error.response.data.message || "Registration failed.");
-      setOpen(true);
+      alert(error.response.data.message || "Registration failed.");
     }
-  };
-
-  const handleClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setOpen(false);
   };
 
   return (
@@ -102,6 +87,9 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
           sx={{ marginBottom: 2 }}
         />
+        <Link alignSelf="end" href="/forgot-password">
+          Forgot Password
+        </Link>
         <Stack direction="row" spacing={2} sx={{ marginTop: 2, width: "100%" }}>
           <Button
             variant="contained"
@@ -121,22 +109,6 @@ const Login = () => {
           </Button>
         </Stack>
       </Paper>
-
-      {/* Snackbar for displaying success or error message */}
-      <Snackbar
-        open={open}
-        autoHideDuration={6000} // Adjust as needed
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleClose}
-          severity={successMessage ? "success" : "error"}
-          sx={{ width: "100%" }}
-        >
-          {successMessage || errorMessage}
-        </Alert>
-      </Snackbar>
     </Stack>
   );
 };
