@@ -113,11 +113,7 @@ const BookList = () => {
         }}
       />
       {books.length > 0 ? (
-        <Stack
-          direction="row"
-          flexWrap="wrap"
-          gap="16px"
-        >
+        <Stack direction="row" flexWrap="wrap" gap="16px">
           {books.map((book) => (
             <Card
               key={book._id}

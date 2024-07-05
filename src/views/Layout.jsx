@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -22,7 +21,10 @@ import {
   CollectionsBookmark,
   History,
   Logout,
+  ManageAccounts,
 } from "@mui/icons-material";
+import { jwtDecode } from "jwt-decode";
+import { useEffect, useState } from "react";
 
 const drawerWidth = 240;
 
@@ -100,11 +102,19 @@ const menuItems = [
     text: "Reservations",
     icon: <Bookmarks />,
     href: "/app/reservations",
+    role: "user",
   },
   {
     text: "Reservations History",
     icon: <History />,
     href: "/app/reservations-history",
+    role: "user",
+  },
+  {
+    text: "Users",
+    icon: <ManageAccounts />,
+    href: "/app/users",
+    role: "admin",
   },
   // Add more items here as needed
 ];
@@ -112,7 +122,18 @@ const menuItems = [
 export default function Layout() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [userRole, setUserRole] = useState(null); // State to store user role
+  const [userEmail, setUserEmail] = useState(""); // State to store user email
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = jwtDecode(token);
+      setUserRole(decoded.user.role); // Extract role from decoded token and set state
+      setUserEmail(decoded.user.email); // Extract email from decoded token and set state
+    }
+  }, []);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -147,6 +168,13 @@ export default function Layout() {
           <Typography variant="h6" noWrap component="div">
             PW Library
           </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <Typography variant="body2" sx={{ pr: 2 }}>
+            {userEmail && `${userEmail.split("@")[0]} (${userRole})`}
+          </Typography>
+          <IconButton color="inherit" onClick={handleLogout} edge="end">
+            <Logout />
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
@@ -161,59 +189,38 @@ export default function Layout() {
         </DrawerHeader>
         <Divider />
         <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-              <ListItemButton
-                to={item.href}
-                sx={{
-                  minHeight: 48,
-                  justifyContent: open ? "initial" : "center",
-                  px: 2.5,
-                }}
+          {menuItems
+            .filter((item) => !item.role || item.role === userRole) // Filter items based on user role
+            .map((item) => (
+              <ListItem
+                key={item.text}
+                disablePadding
+                sx={{ display: "block" }}
               >
-                <ListItemIcon
+                <ListItemButton
+                  to={item.href}
                   sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : "auto",
-                    justifyContent: "center",
+                    minHeight: 48,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  sx={{ opacity: open ? 1 : 0 }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          <ListItem
-            onClick={handleLogout}
-            disablePadding
-            sx={{ display: "block" }}
-          >
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <Logout />
-              </ListItemIcon>
-              <ListItemText primary="Logout" sx={{ opacity: open ? 1 : 0 }} />
-            </ListItemButton>
-          </ListItem>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.text}
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>

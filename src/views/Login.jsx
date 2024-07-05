@@ -6,6 +6,7 @@ import {
   Typography,
   Paper,
   Link,
+  CircularProgress,
 } from "@mui/material";
 import axios from "../api/axios";
 import { useNavigate } from "react-router";
@@ -14,9 +15,12 @@ const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loadingLogin, setLoadingLogin] = useState(false); // State for login button loading
+  const [loadingRegister, setLoadingRegister] = useState(false); // State for register button loading
 
   const handleLogin = async () => {
     try {
+      setLoadingLogin(true); // Start loading state
       const response = await axios.post("/users/login", { email, password });
       const token = response.data.token;
       localStorage.setItem("token", token); // Store the token in local storage
@@ -25,11 +29,14 @@ const Login = () => {
     } catch (error) {
       console.error("Login failed:", error);
       alert(error.response.data.message);
+    } finally {
+      setLoadingLogin(false); // End loading state
     }
   };
 
   const handleRegister = async () => {
     try {
+      setLoadingRegister(true); // Start loading state
       const response = await axios.post("/users/register", {
         email,
         password,
@@ -41,6 +48,8 @@ const Login = () => {
     } catch (error) {
       console.error("Registration failed:", error);
       alert(error.response.data.message || "Registration failed.");
+    } finally {
+      setLoadingRegister(false); // End loading state
     }
   };
 
@@ -98,16 +107,18 @@ const Login = () => {
             color="primary"
             fullWidth
             onClick={handleLogin}
+            disabled={loadingLogin} // Disable button when loading
           >
-            Login
+            {loadingLogin ? <CircularProgress size={24} /> : "Login"}
           </Button>
           <Button
             variant="outlined"
             color="primary"
             fullWidth
             onClick={handleRegister}
+            disabled={loadingRegister} // Disable button when loading
           >
-            Register
+            {loadingRegister ? <CircularProgress size={24} /> : "Register"}
           </Button>
         </Stack>
       </Paper>

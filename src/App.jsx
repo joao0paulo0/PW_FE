@@ -13,6 +13,8 @@ import Reservations from "./views/Reservations";
 import BookDetails from "./views/BookDetails";
 import ReservationsHistory from "./views/ReservationsHistory";
 import ChangePassword from "./views/ChangePasword";
+import Users from "./views/Users";
+import UserDetail from "./views/UserDetail";
 
 const PrivateRoute = () => {
   const token = localStorage.getItem("token");
@@ -39,6 +41,8 @@ function App() {
               element={<ReservationsHistory />}
             />
             <Route path="book/:bookId" element={<BookDetails />} />
+            <Route path="users" element={<Users />} />
+            <Route path="users/:userId" element={<UserDetail />} />
           </Route>
         </Route>
       </Routes>
