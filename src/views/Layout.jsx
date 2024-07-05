@@ -102,7 +102,7 @@ const menuItems = [
     href: "/app/reservations",
   },
   {
-    text: "Reservations",
+    text: "Reservations History",
     icon: <History />,
     href: "/app/reservations-history",
   },

@@ -40,18 +40,16 @@ const BookDetails = () => {
           {book.title}
         </Typography>
         <Typography variant="body1" color="textSecondary">
-          <strong>Author:</strong> {book.author}
+          <strong>Author: </strong> {book.author}
         </Typography>
         <Typography variant="body1" color="textSecondary">
-          <strong>Category:</strong>
-          {book.category}
+          <strong>Category: </strong> {book.category}
         </Typography>
         <Typography variant="body1" color="textSecondary">
-          <strong>Available Copies:</strong> {book.availableCopies}
+          <strong>Available Copies: </strong> {book.availableCopies}
         </Typography>
         <Typography variant="body1" color="textSecondary">
-          <strong>Description:</strong>
-          {book.description}
+          <strong>Description: </strong> {book.description}
         </Typography>
       </CardContent>
     </Card>

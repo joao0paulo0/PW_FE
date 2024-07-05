@@ -8,6 +8,8 @@ import { Button, CardActions } from "@mui/material";
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
 
+  console.log(reservations);
+
   useEffect(() => {
     const fetchReservations = async () => {
       try {
@@ -23,11 +25,11 @@ const Reservations = () => {
 
   const handleCancelReservation = async (reservationId) => {
     try {
-      await axios.delete(`/reservations/${reservationId}`);
+      await axios.put(`/reservations/${reservationId}`, { status: "returned" });
       setReservations((prevReservations) =>
         prevReservations.filter((res) => res._id !== reservationId)
       );
-      alert('Reservation Canceled')
+      alert("Reservation Canceled");
     } catch (error) {
       console.error("Error cancelling reservation:", error);
     }
@@ -50,6 +52,10 @@ const Reservations = () => {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
+
+  if (filteredReservations.length === 0) {
+    return <p>No active reservations</p>;
+  }
 
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
