@@ -9,6 +9,7 @@ import {
   CardActions,
   Stack,
   TextField,
+  TablePagination,
 } from "@mui/material";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
@@ -17,22 +18,26 @@ import { jwtDecode } from "jwt-decode";
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0); // Change initial page to 0 for zero-indexing
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Set default rows per page
+  const [totalItems, setTotalItems] = useState(0); // State to store total number of items
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchBooks(); // Initial fetch on component mount
-  }, [page]); // Refetch books when page or limit changes
+  }, [page, rowsPerPage, searchQuery]); // Refetch books when page, rowsPerPage or searchQuery changes
 
   const fetchBooks = async () => {
     try {
       const response = await axios.get("/books/", {
         params: {
           ...getSearchParams(),
-          page,
+          page: page + 1, // Adjust page number for server pagination
+          limit: rowsPerPage, // Add limit for server pagination
         },
       });
-      setBooks(response.data);
+      setBooks(response.data.books); // Set books array from the response
+      setTotalItems(response.data.totalItems); // Set totalItems from the response
     } catch (error) {
       console.error("Error fetching books:", error);
     }
@@ -75,12 +80,17 @@ const BookList = () => {
   };
 
   const handleSearch = () => {
-    setPage(1); // Reset page to 1 when performing a new search
+    setPage(0); // Reset page to 0 when performing a new search
     fetchBooks();
   };
 
-  const handlePageChange = (newPage) => {
+  const handleChangePage = (event, newPage) => {
     setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset page to 0 when changing rows per page
   };
 
   return (
@@ -102,15 +112,11 @@ const BookList = () => {
           }
         }}
       />
-      <Typography paddingX={1} variant="body1">
-        <strong>Limit:</strong> 10 Books
-      </Typography>
-      {books ? (
+      {books.length > 0 ? (
         <Stack
           direction="row"
           flexWrap="wrap"
           gap="16px"
-          justifyContent="center"
         >
           {books.map((book) => (
             <Card
@@ -175,31 +181,17 @@ const BookList = () => {
           ))}
         </Stack>
       ) : (
-        <></>
+        <Typography variant="body1">No books found</Typography>
       )}
-      {/* Pagination controls */}
-      <Stack
-        direction="row"
-        justifyContent="center"
-        alignItems="center"
-        spacing={2}
-      >
-        <Button
-          variant="outlined"
-          disabled={page === 1}
-          onClick={() => handlePageChange(page - 1)}
-        >
-          Previous
-        </Button>
-        <Typography variant="body1">Page {page}</Typography>
-        <Button
-          disabled={books.length === 0}
-          variant="outlined"
-          onClick={() => handlePageChange(page + 1)}
-        >
-          Next
-        </Button>
-      </Stack>
+      {/* Pagination using TablePagination */}
+      <TablePagination
+        component="div"
+        count={totalItems} // Use totalItems for the count
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </Stack>
   );
 };

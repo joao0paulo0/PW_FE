@@ -4,6 +4,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import { Button, CardActions } from "@mui/material";
+import { jwtDecode } from "jwt-decode";
 
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
@@ -13,7 +14,15 @@ const Reservations = () => {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await axios.get("/reservations");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        const decoded = jwtDecode(token);
+        const userId = decoded.user.id;
+
+        const response = await axios.get(`/reservations/user/${userId}`);
         setReservations(response.data);
       } catch (error) {
         console.error("Error fetching reservations:", error);
@@ -67,6 +76,10 @@ const Reservations = () => {
             </Typography>
             <Typography variant="body1" color="text.secondary">
               <strong>Status:</strong> {reservation.status}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Reservation Date:</strong>{" "}
+              {formatReturnDate(reservation.reservationDate)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               <strong>Return By:</strong>{" "}
