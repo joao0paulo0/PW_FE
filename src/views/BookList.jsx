@@ -10,6 +10,10 @@ import {
   TextField,
   Typography,
   TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +24,8 @@ import { Add } from "@mui/icons-material";
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [bookStock, setBookStock] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(undefined);
+  const [sortOption, setSortOption] = useState(undefined);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
@@ -40,7 +45,7 @@ const BookList = () => {
 
   useEffect(() => {
     fetchBooks();
-  }, [page, rowsPerPage, searchQuery, isAdmin]);
+  }, [page, rowsPerPage, searchQuery, isAdmin, sortOption]);
 
   const fetchBooks = async () => {
     try {
@@ -54,7 +59,6 @@ const BookList = () => {
       setBooks(response.data.books);
       setTotalItems(response.data.totalItems);
       setBookStock(response.data.bookStock);
-      console.log(response.data.limitBookStock);
       setLimitBookStock(response.data.limitBookStock);
     } catch (error) {
       console.error("Error fetching books:", error);
@@ -94,7 +98,14 @@ const BookList = () => {
   const getSearchParams = () => {
     return {
       search: searchQuery,
+      sort: sortOption,
     };
+  };
+
+  const handleSortChange = (event) => {
+    const selectedOption = event.target.value;
+    setSortOption(selectedOption === "" ? undefined : selectedOption);
+    setPage(0);
   };
 
   const getUserIdFromToken = () => {
@@ -104,7 +115,6 @@ const BookList = () => {
 
   const handleSearch = () => {
     setPage(0);
-    fetchBooks();
   };
 
   const handleChangePage = (event, newPage) => {
@@ -118,10 +128,15 @@ const BookList = () => {
 
   return (
     <Stack padding={2} gap={4}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={3}
+      >
         <TextField
           label="Search"
-          sx={{ maxWidth: "70%" }}
+          sx={{ maxWidth: "35%" }}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -137,6 +152,27 @@ const BookList = () => {
             }
           }}
         />
+        <FormControl
+          fullWidth
+          sx={{
+            width: "30%",
+          }}
+        >
+          <InputLabel id="sort-label">Sort By</InputLabel>
+          <Select
+            labelId="sort-label"
+            id="sort-select"
+            value={sortOption}
+            onChange={handleSortChange}
+            label="Sort By"
+          >
+            <MenuItem value="">None</MenuItem>
+            <MenuItem value="title">Title</MenuItem>
+            <MenuItem value="author">Author</MenuItem>
+            <MenuItem value="category">Category</MenuItem>
+            <MenuItem value="availableCopies">Available Copies</MenuItem>
+          </Select>
+        </FormControl>
         {isAdmin && (
           <Stack direction="row" alignItems="center" gap={3}>
             <Typography variant="body1">
