@@ -41,6 +41,7 @@ function App() {
               element={<ReservationsHistory />}
             />
             <Route path="book/:bookId" element={<BookDetails />} />
+            <Route path="book/create-book" element={<BookDetails />} />
             <Route path="users" element={<Users />} />
             <Route path="users/:userId" element={<UserDetail />} />
           </Route>

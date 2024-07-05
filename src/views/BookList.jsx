@@ -1,43 +1,56 @@
 import { useEffect, useState } from "react";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardMedia from "@mui/material/CardMedia";
-import Typography from "@mui/material/Typography";
 import {
   Button,
+  Card,
   CardActionArea,
   CardActions,
+  CardContent,
+  CardMedia,
   Stack,
   TextField,
+  Typography,
   TablePagination,
 } from "@mui/material";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import CreateBookDialog from "./CreateBookDialog"; // Import the dialog component
+import { Add } from "@mui/icons-material";
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(0); // Change initial page to 0 for zero-indexing
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Set default rows per page
-  const [totalItems, setTotalItems] = useState(0); // State to store total number of items
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false); // State for dialog
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
-    fetchBooks(); // Initial fetch on component mount
-  }, [page, rowsPerPage, searchQuery]); // Refetch books when page, rowsPerPage or searchQuery changes
+    if (token) {
+      const decoded = jwtDecode(token);
+      setIsAdmin(decoded.user.role === "admin");
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchBooks();
+  }, [page, rowsPerPage, searchQuery]);
 
   const fetchBooks = async () => {
     try {
       const response = await axios.get("/books/", {
         params: {
           ...getSearchParams(),
-          page: page + 1, // Adjust page number for server pagination
-          limit: rowsPerPage, // Add limit for server pagination
+          page: page + 1,
+          limit: rowsPerPage,
         },
       });
-      setBooks(response.data.books); // Set books array from the response
-      setTotalItems(response.data.totalItems); // Set totalItems from the response
+      setBooks(response.data.books);
+      setTotalItems(response.data.totalItems);
     } catch (error) {
       console.error("Error fetching books:", error);
     }
@@ -49,28 +62,28 @@ const BookList = () => {
 
   const handleBooking = async (bookId) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No token found");
-      }
-
-      const decoded = jwtDecode(token);
-      const userId = decoded.user.id;
-
-      const response = await axios.post("/reservations/create", {
-        userId,
+      await axios.post("/reservations/create", {
+        userId: getUserIdFromToken(),
         bookId,
       });
-
       alert("Booked successfully");
-      console.log("Booking successful:", response.data);
-
-      // Call fetchBooks again to update the book list after booking
       fetchBooks();
     } catch (error) {
       alert(error.response.data.message);
       console.error("Error booking book:", error);
     }
+  };
+
+  const handleCreateNewBook = () => {
+    setCreateDialogOpen(true);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setCreateDialogOpen(false);
+  };
+
+  const handleCreateBook = () => {
+    fetchBooks(); // Refresh book list after creation
   };
 
   const getSearchParams = () => {
@@ -79,8 +92,13 @@ const BookList = () => {
     };
   };
 
+  const getUserIdFromToken = () => {
+    const decoded = jwtDecode(token);
+    return decoded.user.id;
+  };
+
   const handleSearch = () => {
-    setPage(0); // Reset page to 0 when performing a new search
+    setPage(0);
     fetchBooks();
   };
 
@@ -90,28 +108,45 @@ const BookList = () => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset page to 0 when changing rows per page
+    setPage(0);
   };
 
   return (
     <Stack padding={2} gap={4}>
-      <TextField
-        label="Search"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        variant="outlined"
-        margin="normal"
-        fullWidth
-        InputLabelProps={{
-          shrink: true,
-        }}
-        onKeyPress={(ev) => {
-          if (ev.key === "Enter") {
-            handleSearch();
-            ev.preventDefault();
-          }
-        }}
-      />
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={2}
+      >
+        <TextField
+          label="Search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          margin="normal"
+          fullWidth
+          InputLabelProps={{
+            shrink: true,
+          }}
+          onKeyPress={(ev) => {
+            if (ev.key === "Enter") {
+              handleSearch();
+              ev.preventDefault();
+            }
+          }}
+        />
+        {isAdmin && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleCreateNewBook}
+            startIcon={<Add />}
+          >
+            Book
+          </Button>
+        )}
+      </Stack>
       {books.length > 0 ? (
         <Stack direction="row" flexWrap="wrap" gap="16px">
           {books.map((book) => (
@@ -119,7 +154,6 @@ const BookList = () => {
               key={book._id}
               sx={{
                 maxWidth: 345,
-                // Apply grayscale effect and pointer-events none if availableCopies === 0
                 filter: book.availableCopies === 0 ? "grayscale(100%)" : "none",
                 pointerEvents: book.availableCopies === 0 ? "none" : "auto",
               }}
@@ -136,12 +170,7 @@ const BookList = () => {
                   alt={book.title}
                 />
                 <CardContent>
-                  <Typography
-                    gutterBottom
-                    variant="h5"
-                    component="div"
-                    sx={{ color: "text.primary" }}
-                  >
+                  <Typography gutterBottom variant="h5" component="div">
                     {book.title}
                   </Typography>
                   <Typography
@@ -163,30 +192,36 @@ const BookList = () => {
                   </Typography>
                 </CardContent>
               </CardActionArea>
-              <CardActions>
-                <Button
-                  size="small"
-                  color="primary"
-                  onClick={() => handleBooking(book._id)}
-                  disabled={book.availableCopies === 0}
-                >
-                  Book
-                </Button>
-              </CardActions>
+              {!isAdmin && (
+                <CardActions>
+                  <Button
+                    size="small"
+                    color="primary"
+                    onClick={() => handleBooking(book._id)}
+                    disabled={book.availableCopies === 0}
+                  >
+                    Book
+                  </Button>
+                </CardActions>
+              )}
             </Card>
           ))}
         </Stack>
       ) : (
         <Typography variant="body1">No books found</Typography>
       )}
-      {/* Pagination using TablePagination */}
       <TablePagination
         component="div"
-        count={totalItems} // Use totalItems for the count
+        count={totalItems}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+      <CreateBookDialog
+        open={createDialogOpen}
+        onClose={handleCloseCreateDialog}
+        onCreate={handleCreateBook} // Pass handleCreateBook function to dialog
       />
     </Stack>
   );

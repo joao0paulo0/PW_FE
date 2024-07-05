@@ -97,6 +97,12 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           sx={{ marginBottom: 2 }}
+          onKeyPress={(ev) => {
+            if (ev.key === "Enter") {
+              handleLogin();
+              ev.preventDefault();
+            }
+          }}
         />
         <Link alignSelf="end" href="/forgot-password">
           Forgot Password
