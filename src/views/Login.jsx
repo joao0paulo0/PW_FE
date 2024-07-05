@@ -8,8 +8,10 @@ import {
   Link,
 } from "@mui/material";
 import axios from "../api/axios";
+import { useNavigate } from "react-router";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -19,7 +21,7 @@ const Login = () => {
       const token = response.data.token;
       localStorage.setItem("token", token); // Store the token in local storage
       console.log("Login successful:", response.data);
-      // Redirect or perform any post-login actions here
+      navigate("/app/book-list");
     } catch (error) {
       console.error("Login failed:", error);
       alert(error.response.data.message);

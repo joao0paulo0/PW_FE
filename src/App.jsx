@@ -3,10 +3,21 @@ import {
   Route,
   Routes,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import Login from "./views/Login";
 import ForgotPassword from "./views/ForgotPassword";
+import Layout from "./views/Layout";
+import BookList from "./views/BookList";
+import Reservations from "./views/Reservations";
+import BookDetails from "./views/BookDetails";
+import ReservationsHistory from "./views/ReservationsHistory";
 import ChangePassword from "./views/ChangePasword";
+
+const PrivateRoute = () => {
+  const token = localStorage.getItem("token");
+  return token ? <Outlet /> : <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
@@ -19,6 +30,17 @@ function App() {
           path="/change-password/:resetToken"
           element={<ChangePassword />}
         />
+        <Route path="/app/*" element={<PrivateRoute />}>
+          <Route path="" element={<Layout />}>
+            <Route path="book-list" element={<BookList />} />
+            <Route path="reservations" element={<Reservations />} />
+            <Route
+              path="reservations-history"
+              element={<ReservationsHistory />}
+            />
+            <Route path="book/:bookId" element={<BookDetails />} />
+          </Route>
+        </Route>
       </Routes>
     </Router>
   );
