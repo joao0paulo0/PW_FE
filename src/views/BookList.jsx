@@ -19,10 +19,12 @@ import { Add } from "@mui/icons-material";
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
+  const [bookStock, setBookStock] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+  const [limitBookStock, setLimitBookStock] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false); // State for dialog
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ const BookList = () => {
 
   useEffect(() => {
     fetchBooks();
-  }, [page, rowsPerPage, searchQuery]);
+  }, [page, rowsPerPage, searchQuery, isAdmin]);
 
   const fetchBooks = async () => {
     try {
@@ -51,6 +53,9 @@ const BookList = () => {
       });
       setBooks(response.data.books);
       setTotalItems(response.data.totalItems);
+      setBookStock(response.data.bookStock);
+      console.log(response.data.limitBookStock);
+      setLimitBookStock(response.data.limitBookStock);
     } catch (error) {
       console.error("Error fetching books:", error);
     }
@@ -113,14 +118,10 @@ const BookList = () => {
 
   return (
     <Stack padding={2} gap={4}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        gap={2}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
         <TextField
           label="Search"
+          sx={{ maxWidth: "70%" }}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -137,14 +138,22 @@ const BookList = () => {
           }}
         />
         {isAdmin && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleCreateNewBook}
-            startIcon={<Add />}
-          >
-            Book
-          </Button>
+          <Stack direction="row" alignItems="center" gap={3}>
+            <Typography variant="body1">
+              <strong>Stock:</strong> {bookStock}
+            </Typography>
+            <Typography variant="body1">
+              <strong>Stock Limit:</strong> {limitBookStock}
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleCreateNewBook}
+              startIcon={<Add />}
+            >
+              Book
+            </Button>
+          </Stack>
         )}
       </Stack>
       {books.length > 0 ? (
@@ -155,13 +164,9 @@ const BookList = () => {
               sx={{
                 maxWidth: 345,
                 filter: book.availableCopies === 0 ? "grayscale(100%)" : "none",
-                pointerEvents: book.availableCopies === 0 ? "none" : "auto",
               }}
             >
-              <CardActionArea
-                onClick={() => handleBookClick(book._id)}
-                disabled={book.availableCopies === 0}
-              >
+              <CardActionArea onClick={() => handleBookClick(book._id)}>
                 <CardMedia
                   component="img"
                   height="200"

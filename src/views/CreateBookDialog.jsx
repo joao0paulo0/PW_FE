@@ -37,7 +37,8 @@ const CreateBookDialog = ({ open, onClose, onCreate }) => {
       onCreate(); // Notify parent component that book was created successfully
       onClose(); // Close dialog
     } catch (error) {
-      alert("Failed to create book: " + error.message);
+      console.log(error);
+      alert(error.response.data.message);
     }
   };
 
