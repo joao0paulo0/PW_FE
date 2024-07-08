@@ -5,6 +5,7 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
+import PropTypes from "prop-types"; // Import prop-types
 import Login from "./views/Login";
 import ForgotPassword from "./views/ForgotPassword";
 import Layout from "./views/Layout";
@@ -15,10 +16,27 @@ import ReservationsHistory from "./views/ReservationsHistory";
 import ChangePassword from "./views/ChangePasword";
 import Users from "./views/Users";
 import UserDetail from "./views/UserDetail";
+import { jwtDecode } from "jwt-decode";
 
-const PrivateRoute = () => {
+const PrivateRoute = ({ allowedRoles }) => {
   const token = localStorage.getItem("token");
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const decodedToken = jwtDecode(token);
+  const userRole = decodedToken.user.role;
+
+  if (!allowedRoles.includes(userRole)) {
+    return <Navigate to="/app/book-list" replace />;
+  }
+
+  return <Outlet />;
+};
+
+PrivateRoute.propTypes = {
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 function App() {
@@ -32,7 +50,10 @@ function App() {
           path="/change-password/:resetToken"
           element={<ChangePassword />}
         />
-        <Route path="/app/*" element={<PrivateRoute />}>
+        <Route
+          path="/app/*"
+          element={<PrivateRoute allowedRoles={["user", "admin"]} />}
+        >
           <Route path="" element={<Layout />}>
             <Route path="book-list" element={<BookList />} />
             <Route path="reservations" element={<Reservations />} />
@@ -42,8 +63,13 @@ function App() {
             />
             <Route path="book/:bookId" element={<BookDetails />} />
             <Route path="book/create-book" element={<BookDetails />} />
-            <Route path="users" element={<Users />} />
-            <Route path="users/:userId" element={<UserDetail />} />
+            <Route
+              path="users"
+              element={<PrivateRoute allowedRoles={["admin"]} />}
+            >
+              <Route path="" element={<Users />} />
+              <Route path=":userId" element={<UserDetail />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

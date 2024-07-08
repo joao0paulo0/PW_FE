@@ -9,8 +9,6 @@ import { jwtDecode } from "jwt-decode";
 const Reservations = () => {
   const [reservations, setReservations] = useState([]);
 
-  console.log(reservations);
-
   useEffect(() => {
     const fetchReservations = async () => {
       try {
